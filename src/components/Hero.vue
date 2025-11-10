@@ -2,7 +2,7 @@
 import { ref, onMounted } from 'vue'
 import QRCode from 'qrcode'
 
-// Direct file in /public (same as before)
+// Direct file in /public (no code changes needed for hosting/CDN later)
 const DOWNLOAD_URL = '/Voclaria(Final Version).apk'
 
 // import the image from src/assets (works with Vite alias @ -> /src)
@@ -13,7 +13,6 @@ const qrDataUrl = ref('')
 
 // Generate QR that points to the *absolute* APK URL so it works when scanned on a phone
 onMounted(async () => {
-  // Build an absolute URL to the APK (handles ports/hosts in dev/prod)
   const absoluteApkUrl = new URL(DOWNLOAD_URL, window.location.origin).toString()
   try {
     qrDataUrl.value = await QRCode.toDataURL(absoluteApkUrl, {
@@ -65,23 +64,26 @@ onMounted(async () => {
     <!-- HERO -->
     <div class="relative z-10">
       <div class="w-full max-w-[120rem] mx-auto px-5 sm:px-6 lg:px-10">
-        <div class="py-10 sm:py-12 lg:py-16">
-          <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 xl:gap-14 items-center">
+        <!-- tighter mobile padding; desktop unchanged -->
+        <div class="py-8 sm:py-10 md:py-12 lg:py-16">
+          <div class="grid grid-cols-1 lg:grid-cols-12 gap-8 md:gap-10 xl:gap-14 items-center">
             <!-- Left column: text (7 cols) -->
             <div class="lg:col-span-7">
-              <div class="space-y-2 mb-5">
-                <h1 class="font-extrabold leading-[1.08] text-[clamp(1.8rem,3.6vw,3.75rem)]">
+              <div class="space-y-1.5 sm:space-y-2 mb-4">
+                <!-- mobile-down sizes reduced; lg stays large -->
+                <h1 class="font-extrabold leading-[1.05] text-[1.75rem] sm:text-[2.25rem] md:text-[2.75rem] lg:text-[3.75rem]">
                   Voclaria:
                 </h1>
-                <h1 class="font-extrabold leading-[1.08] text-[clamp(1.8rem,3.6vw,3.75rem)]">
+                <h1 class="font-extrabold leading-[1.05] text-[1.75rem] sm:text-[2.25rem] md:text-[2.75rem] lg:text-[3.75rem]">
                   AI Simulation for
                 </h1>
-                <h1 class="font-extrabold leading-[1.08] text-purple-400 text-[clamp(1.8rem,3.6vw,3.75rem)]">
+                <h1 class="font-extrabold leading-[1.05] text-purple-400 text-[1.75rem] sm:text-[2.25rem] md:text-[2.75rem] lg:text-[3.75rem]">
                   Communication & English Literacy Skills
                 </h1>
               </div>
 
-              <p class="text-gray-200 text-[clamp(0.9rem,1vw,1.05rem)] max-w-[65ch] mb-7 leading-relaxed">
+              <!-- smaller paragraph + tighter leading on mobile -->
+              <p class="text-gray-200 text-[0.9rem] sm:text-[0.95rem] md:text-[1rem] leading-7 sm:leading-8 max-w-[60ch] md:max-w-[65ch] mb-6 md:mb-7">
                 Voclaria is an AI-powered mobile app for Senior High School learners that builds
                 speaking confidence and reading fluency through real-time, personalized feedback.
                 Students complete curriculum-aligned speaking and reading tasks, then receive instant
@@ -96,14 +98,14 @@ onMounted(async () => {
               <div class="lg:hidden">
                 <a
                   :href="DOWNLOAD_URL"
-                  class="inline-flex items-center justify-center bg-purple-500 hover:bg-purple-500/90 transition-colors border border-white/30 px-7 py-3.5 rounded-lg text-[clamp(0.9rem,0.95vw,1rem)] font-semibold shadow-lg w-full sm:w-auto"
+                  class="inline-flex items-center justify-center bg-purple-500 hover:bg-purple-500/90 transition-colors border border-white/30 px-5 py-3 rounded-lg text-[0.9rem] font-semibold shadow-lg w-full sm:w-auto"
                 >
                   Download for Android
                 </a>
               </div>
 
               <!-- Social proof -->
-              <div class="flex items-center mt-6">
+              <div class="flex items-center mt-4">
                 <div class="flex -space-x-2">
                   <div class="w-8 h-8 rounded-full bg-white/10 grid place-items-center">
                     <span class="text-white/80 text-sm font-bold">X</span>
