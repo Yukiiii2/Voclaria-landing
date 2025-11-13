@@ -102,7 +102,7 @@ function submitInquiry(e) {
 
 // Team data
 const team = [
-  { initials: 'DF', name: 'Dianna Mae Flores', role: 'Leader / Project Manager' },
+  { initials: 'DF', name: 'Dianna Mae Flores', role: 'Project Manager' },
   { initials: 'XB', name: 'Xaian Paul Belderol', role: 'UI/UX designer / Frontend ' },
   { initials: 'RD', name: 'Rockford Jade Dagohoy', role: 'AI Developer / Backend Developer / System analyst' },
   { initials: 'EA', name: 'Earl Ang', role: 'UI/UX designer / Frontend / Backend Developer' },
