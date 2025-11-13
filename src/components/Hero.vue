@@ -102,10 +102,10 @@ function submitInquiry(e) {
 
 // Team data
 const team = [
-  { initials: 'MA', name: 'Mico Ang', role: 'Founder / Product Lead' },
-  { initials: 'AN', name: 'Ashley Geollegue', role: 'Curriculum & QA' },
-  { initials: 'JL', name: 'Jelly Lastimado', role: 'Engineering' },
-  { initials: 'KB', name: 'Kazandra Villarmino', role: 'Research & Testing' },
+  { initials: 'DF', name: 'Dianna Mae Flores', role: 'Leader / Project Manager' },
+  { initials: 'XB', name: 'Xaian Paul Belderol', role: 'UI/UX designer / Frontend ' },
+  { initials: 'RD', name: 'Rockford Jade Dagohoy', role: 'AI Developer / Backend Developer / System analyst' },
+  { initials: 'EA', name: 'Earl Ang', role: 'UI/UX designer / Frontend / Backend Developer' },
 ]
 
 // Feature icons mapping
