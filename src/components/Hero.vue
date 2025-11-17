@@ -3,7 +3,7 @@ import { ref, onMounted, computed } from 'vue'
 
 // Direct file in /public
 const APK_FILENAME = 'voclaria-final.apk'
-const DOWNLOAD_URL = `/${APK_FILENAME}`
+const DOWNLOAD_URL = `https://github.com/Yukiiii2/Voclaria-landing/releases/download/v1.0.0/voclaria-final.apk`
 const CONTACT_EMAIL = 'voclaria.app@gmail.com'
 
 // Vite alias for src asset
