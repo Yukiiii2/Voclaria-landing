@@ -2,7 +2,8 @@
 import { ref, onMounted, computed } from 'vue'
 
 // Direct file in /public
-const DOWNLOAD_URL = '/Voclaria(Final Version).apk'
+const APK_FILENAME = 'voclaria-final.apk'
+const DOWNLOAD_URL = `/${APK_FILENAME}`
 const CONTACT_EMAIL = 'voclaria.app@gmail.com'
 
 // Vite alias for src asset
@@ -44,7 +45,8 @@ onMounted(async () => {
     const url = new URL(DOWNLOAD_URL, window.location.origin)
     url.searchParams.set('utm_source', 'qr')
     url.searchParams.set('utm_medium', 'landing')
-    const absoluteApkUrl = encodeURI(url.toString())
+
+    const absoluteApkUrl = url.toString()
 
     qrDataUrl.value = await QRCode.toDataURL(absoluteApkUrl, {
       errorCorrectionLevel: 'M',
