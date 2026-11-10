@@ -1348,6 +1348,7 @@ img {
 
 .contact-section {
   position: relative;
+  padding-block: clamp(72px, 6.5vw, 96px);
   background:
     radial-gradient(circle at 12% 20%, rgba(111, 72, 220, 0.25), transparent 30%),
     linear-gradient(145deg, #11152d, #090c1c 68%);
@@ -1356,8 +1357,17 @@ img {
 .contact-grid {
   display: grid;
   grid-template-columns: 0.82fr 1.18fr;
-  align-items: start;
+  align-items: center;
   gap: 10vw;
+}
+
+.contact-copy h2 {
+  line-height: 1.02;
+}
+
+.contact-copy h2 em {
+  display: inline-block;
+  margin-top: 0.2em;
 }
 
 .contact-details {
@@ -1625,6 +1635,8 @@ img {
   .educator-grid,
   .faq-grid,
   .contact-grid { grid-template-columns: 1fr; gap: 54px; }
+  .contact-section { padding-block: 68px 72px; }
+  .contact-grid { align-items: start; gap: 46px; }
   .split-heading { align-items: start; }
   .feature-grid { grid-template-columns: repeat(2, 1fr); }
   .proof-grid { gap: 60px; }
@@ -1706,6 +1718,8 @@ img {
   .faq-list summary { min-height: 72px; font-size: .85rem; }
   .faq-list details > p { margin-right: 0; }
   .contact-form { padding: 22px; }
+  .contact-copy h2 { line-height: 1.04; }
+  .contact-copy h2 em { margin-top: 0.16em; }
   .contact-details strong { overflow-wrap: anywhere; }
   .footer-top { grid-template-columns: 1fr; }
   .footer-download { justify-self: start; }
