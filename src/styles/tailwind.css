@@ -324,6 +324,19 @@ img {
   letter-spacing: -0.055em;
 }
 
+.heading-primary,
+.heading-accent {
+  display: block;
+}
+
+.heading-accent {
+  margin-top: clamp(20px, 2.5vw, 36px);
+}
+
+.hero-copy h1 .heading-accent {
+  margin-top: clamp(22px, 3vw, 43px);
+}
+
 .hero-description {
   max-width: 625px;
   margin: 30px 0 0;
@@ -1361,15 +1374,6 @@ img {
   gap: 10vw;
 }
 
-.contact-copy h2 {
-  line-height: 1.02;
-}
-
-.contact-copy h2 em {
-  display: inline-block;
-  margin-top: 0.2em;
-}
-
 .contact-details {
   display: grid;
   gap: 22px;
@@ -1718,8 +1722,6 @@ img {
   .faq-list summary { min-height: 72px; font-size: .85rem; }
   .faq-list details > p { margin-right: 0; }
   .contact-form { padding: 22px; }
-  .contact-copy h2 { line-height: 1.04; }
-  .contact-copy h2 em { margin-top: 0.16em; }
   .contact-details strong { overflow-wrap: anywhere; }
   .footer-top { grid-template-columns: 1fr; }
   .footer-download { justify-self: start; }

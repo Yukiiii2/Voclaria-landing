@@ -203,7 +203,7 @@ onBeforeUnmount(() => {
         <div class="page-width hero-grid">
           <div class="hero-copy">
             <p class="eyebrow hero-eyebrow"><span></span> Learning that finds your voice</p>
-            <h1>Read with clarity.<br /><em>Speak with confidence.</em></h1>
+            <h1><span class="heading-primary">Read with clarity.</span><em class="heading-accent">Speak with confidence.</em></h1>
             <p class="hero-description">Voclaria brings reading and speaking practice into one focused mobile experience, with guided lessons, recorded activities, feedback flows, and progress you can revisit.</p>
 
             <div class="hero-actions">
@@ -242,7 +242,7 @@ onBeforeUnmount(() => {
       <section id="students" class="section student-section">
         <div class="page-width">
           <div class="section-heading split-heading" data-reveal>
-            <div><p class="eyebrow"><span></span> For students</p><h2>A calmer place to<br /><em>practice out loud.</em></h2></div>
+            <div><p class="eyebrow"><span></span> For students</p><h2><span class="heading-primary">A calmer place to</span><em class="heading-accent">practice out loud.</em></h2></div>
             <p>Build the habits behind clearer reading and speaking through focused modules, repeatable practice, and progress you can return to.</p>
           </div>
           <div class="feature-grid">
@@ -256,7 +256,7 @@ onBeforeUnmount(() => {
       <section class="section proof-section">
         <div class="page-width proof-grid">
           <div class="proof-copy" data-reveal>
-            <p class="eyebrow light"><span></span> Verified product scope</p><h2>Built around<br /><em>real learning flows.</em></h2>
+            <p class="eyebrow light"><span></span> Verified product scope</p><h2><span class="heading-primary">Built around</span><em class="heading-accent">real learning flows.</em></h2>
             <p>Voclaria brings reading, speaking, class management, and progress tracking into one connected learning experience for students and educators.</p>
             <a :href="APP_SOURCE_URL" target="_blank" rel="noopener noreferrer" class="text-link">Inspect the application source <span aria-hidden="true">↗</span></a>
           </div>
@@ -279,7 +279,7 @@ onBeforeUnmount(() => {
             <p>Conceptual dashboard composition — not an application screenshot.</p>
           </div>
           <div class="educator-copy" data-reveal>
-            <p class="eyebrow"><span></span> For educators</p><h2>Structure the practice.<br /><em>Support the progress.</em></h2>
+            <p class="eyebrow"><span></span> For educators</p><h2><span class="heading-primary">Structure the practice.</span><em class="heading-accent">Support the progress.</em></h2>
             <p class="section-intro">Voclaria’s teacher workflows connect class management, learner progress, modules, and live activities in one mobile application.</p>
             <div class="educator-list"><article v-for="feature in educatorFeatures" :key="feature.number"><span>{{ feature.number }}</span><div><h3>{{ feature.title }}</h3><p>{{ feature.description }}</p></div></article></div>
           </div>
@@ -288,7 +288,7 @@ onBeforeUnmount(() => {
 
       <section id="how-it-works" class="section process-section">
         <div class="page-width">
-          <div class="section-heading centered" data-reveal><p class="eyebrow"><span></span> A focused rhythm</p><h2>Practice. Review.<br /><em>Keep growing.</em></h2></div>
+          <div class="section-heading centered" data-reveal><p class="eyebrow"><span></span> A focused rhythm</p><h2><span class="heading-primary">Practice. Review.</span><em class="heading-accent">Keep growing.</em></h2></div>
           <div class="process-grid">
             <article v-for="(step, index) in steps" :key="step.number" data-reveal :style="{ '--delay': `${index * 80}ms` }"><div class="process-number">{{ step.number }}</div><div class="process-line"><i></i></div><h3>{{ step.title }}</h3><p>{{ step.description }}</p></article>
           </div>
@@ -297,7 +297,7 @@ onBeforeUnmount(() => {
 
       <section class="download-section">
         <div class="page-width download-card" data-reveal>
-          <div class="download-copy"><p class="eyebrow light"><span></span> Android release</p><h2>Make room for<br /><em>your next practice.</em></h2><p>Download the current Voclaria APK directly from the official GitHub Release.</p><a class="button button-light" :href="buttonHref">Download v1.0.0 <span aria-hidden="true">↓</span></a><small>121.5 MiB · Direct APK installation · Android only</small></div>
+          <div class="download-copy"><p class="eyebrow light"><span></span> Android release</p><h2><span class="heading-primary">Make room for</span><em class="heading-accent">your next practice.</em></h2><p>Download the current Voclaria APK directly from the official GitHub Release.</p><a class="button button-light" :href="buttonHref">Download v1.0.0 <span aria-hidden="true">↓</span></a><small>121.5 MiB · Direct APK installation · Android only</small></div>
           <div class="qr-panel">
             <template v-if="qrDataUrl"><div class="qr-code"><img :src="qrDataUrl" alt="QR code for the Voclaria Android APK download" /></div><div><strong>Scan to download</strong><span>Open with your Android phone</span></div></template>
             <template v-else><img class="qr-logo" :src="logoUrl" alt="Voclaria logo" /><p>{{ qrError || 'Open this page on desktop to display the download QR code.' }}</p></template>
@@ -307,21 +307,21 @@ onBeforeUnmount(() => {
 
       <section id="team" class="section team-section">
         <div class="page-width">
-          <div class="section-heading split-heading" data-reveal><div><p class="eyebrow"><span></span> The team</p><h2>Designed and built<br /><em>with purpose.</em></h2></div><p>Voclaria is the work of a four-person project team spanning product coordination, design, frontend, backend, AI, and systems analysis.</p></div>
+          <div class="section-heading split-heading" data-reveal><div><p class="eyebrow"><span></span> The team</p><h2><span class="heading-primary">Designed and built</span><em class="heading-accent">with purpose.</em></h2></div><p>Voclaria is the work of a four-person project team spanning product coordination, design, frontend, backend, AI, and systems analysis.</p></div>
           <div class="team-grid"><article v-for="(member, index) in team" :key="member.name" data-reveal :style="{ '--delay': `${index * 65}ms` }"><div class="member-avatar"><span>{{ member.initials }}</span></div><span class="member-number">0{{ index + 1 }}</span><h3>{{ member.name }}</h3><p>{{ member.role }}</p></article></div>
         </div>
       </section>
 
       <section id="faq" class="section faq-section">
         <div class="page-width faq-grid">
-          <div class="faq-heading" data-reveal><p class="eyebrow"><span></span> Good to know</p><h2>Questions,<br /><em>answered plainly.</em></h2><p>Clear information about the current Android release and what to expect.</p></div>
+          <div class="faq-heading" data-reveal><p class="eyebrow"><span></span> Good to know</p><h2><span class="heading-primary">Questions,</span><em class="heading-accent">answered plainly.</em></h2><p>Clear information about the current Android release and what to expect.</p></div>
           <div class="faq-list" data-reveal><details v-for="faq in faqs" :key="faq.question"><summary><span>{{ faq.question }}</span><i aria-hidden="true"></i></summary><p>{{ faq.answer }}</p></details></div>
         </div>
       </section>
 
       <section id="contact" class="section contact-section">
         <div class="page-width contact-grid">
-          <div class="contact-copy" data-reveal><p class="eyebrow light"><span></span> Contact Voclaria</p><h2>Have a question?<br /><em>Start with an email.</em></h2><p>Ask about the Android release, the learning experience, or using Voclaria in a class setting.</p><div class="contact-details"><a :href="`mailto:${CONTACT_EMAIL}`"><span>Email</span><strong>{{ CONTACT_EMAIL }}</strong></a><div><span>Based in</span><strong>Davao City, Philippines</strong></div></div></div>
+          <div class="contact-copy" data-reveal><p class="eyebrow light"><span></span> Contact Voclaria</p><h2><span class="heading-primary">Have a question?</span><em class="heading-accent">Start with an email.</em></h2><p>Ask about the Android release, the learning experience, or using Voclaria in a class setting.</p><div class="contact-details"><a :href="`mailto:${CONTACT_EMAIL}`"><span>Email</span><strong>{{ CONTACT_EMAIL }}</strong></a><div><span>Based in</span><strong>Davao City, Philippines</strong></div></div></div>
           <form class="contact-form" data-reveal @submit.prevent="submitInquiry">
             <div class="field-row"><label for="inquiry-name">Your name</label><input id="inquiry-name" v-model.trim="nameInput" type="text" autocomplete="name" required placeholder="How should we address you?" /></div>
             <div class="field-row"><label for="inquiry-email">Email address</label><input id="inquiry-email" v-model.trim="emailInput" type="email" autocomplete="email" required placeholder="you@example.com" /></div>
