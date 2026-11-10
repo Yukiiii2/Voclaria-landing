@@ -1,589 +1,342 @@
 <script setup>
-import { ref, onMounted, computed } from 'vue'
-
-// Direct file in /public
-const APK_FILENAME = 'voclaria-final.apk'
-const DOWNLOAD_URL = `https://github.com/Yukiiii2/Voclaria-landing/releases/download/v1.0.0/voclaria-final.apk`
-const CONTACT_EMAIL = 'voclaria.app@gmail.com'
-
-// Vite alias for src asset
+import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import logoUrl from '@/assets/Speaksy.png'
 
-// QR data URL (desktop only)
+const DOWNLOAD_URL = 'https://github.com/Yukiiii2/Voclaria-landing/releases/download/v1.0.0/voclaria-final.apk'
+const RELEASE_URL = 'https://github.com/Yukiiii2/Voclaria-landing/releases/tag/v1.0.0'
+const APP_SOURCE_URL = 'https://github.com/Yukiiii2/Voclaria'
+const CONTACT_EMAIL = 'voclaria.app@gmail.com'
+
+const menuOpen = ref(false)
+const menuToggle = ref(null)
 const qrDataUrl = ref('')
 const qrError = ref('')
-
-// Mobile detection
-const isMobileChrome = ref(false)
-
-// Inquiry form state
 const nameInput = ref('')
 const emailInput = ref('')
 const messageInput = ref('')
-const submitting = ref(false)
-const formSuccess = ref(false)
+const formStatus = ref('')
+let revealObserver
 
-// Optional: analytics stub
-function track(event, payload = {}) {
-  // console.log('[analytics]', event, payload)
-}
+const navItems = [
+  { label: 'For students', href: '#students' },
+  { label: 'For educators', href: '#educators' },
+  { label: 'How it works', href: '#how-it-works' },
+  { label: 'Team', href: '#team' },
+  { label: 'FAQ', href: '#faq' },
+  { label: 'Contact', href: '#contact' },
+]
 
-onMounted(async () => {
-  // Detect if user is on mobile Chrome
-  const userAgent = navigator.userAgent
-  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(userAgent)
-  const isChrome = /Chrome/.test(userAgent) && !/Edge/.test(userAgent)
-  isMobileChrome.value = isMobile && isChrome
+const studentFeatures = [
+  { glyph: 'Aa', eyebrow: 'Read', title: 'Build reading confidence', description: 'Work through basic and advanced reading modules, comprehension activities, and recorded reading practice.' },
+  { glyph: 'Wv', eyebrow: 'Speak', title: 'Practice your delivery', description: 'Use guided speaking lessons, voice recording, and private or live video practice to strengthen communication skills.' },
+  { glyph: 'AI', eyebrow: 'Reflect', title: 'Review useful feedback', description: 'Voclaria includes analysis flows for speaking and reading practice so learners can revisit results and improve.' },
+  { glyph: '%', eyebrow: 'Progress', title: 'See learning progress', description: 'Student dashboards surface speaking and reading progress, completed modules, and upcoming learning work.' },
+]
 
-  try {
-    // Only generate QR on desktop (can't scan your own phone)
-    if (window.innerWidth < 1024) return
+const educatorFeatures = [
+  { number: '01', title: 'Create and manage classes', description: 'Teacher workflows include class creation, editing, module management, and student administration.' },
+  { number: '02', title: 'Follow student progress', description: 'Dashboard views combine module completion with speaking and reading progress for enrolled learners.' },
+  { number: '03', title: 'Support live practice', description: 'Teachers can run live-session workflows and participate in the application’s learning community.' },
+]
 
-    const { default: QRCode } = await import('qrcode')
+const verifiedScope = [
+  'Student and teacher account paths',
+  'Reading and speaking lesson modules',
+  'Voice, camera, and video practice flows',
+  'Class, community, and live-session tools',
+  'Supabase-backed authentication and data',
+  'Progress views for learners and educators',
+]
 
-    // Absolute URL + UTM for attribution (QR)
-    const url = new URL(DOWNLOAD_URL, window.location.origin)
-    url.searchParams.set('utm_source', 'qr')
-    url.searchParams.set('utm_medium', 'landing')
+const steps = [
+  { number: '01', title: 'Choose your learning path', description: 'Start with reading or speaking, then move through the level and module that fits your current practice.' },
+  { number: '02', title: 'Practice in the app', description: 'Complete guided activities using text, audio, voice recording, or video where the lesson calls for it.' },
+  { number: '03', title: 'Review and keep moving', description: 'Return to results and progress views, then continue with upcoming modules or teacher-assigned work.' },
+]
 
-    const absoluteApkUrl = url.toString()
+const team = [
+  { initials: 'DF', name: 'Dianna Mae Flores', role: 'Project Manager' },
+  { initials: 'XB', name: 'Xaian Paul Belderol', role: 'UI/UX Designer · Frontend Developer' },
+  { initials: 'RD', name: 'Rockford Jade Dagohoy', role: 'AI Developer · Backend Developer · System Analyst' },
+  { initials: 'EA', name: 'Earl Ang', role: 'UI/UX Designer · Frontend & Backend Developer' },
+]
 
-    qrDataUrl.value = await QRCode.toDataURL(absoluteApkUrl, {
-      errorCorrectionLevel: 'M',
-      margin: 1,
-      width: 512,
-      color: { dark: '#000000', light: '#FFFFFFFF' }
-    })
-  } catch (e) {
-    console.error('Failed generating QR:', e)
-    qrError.value = 'QR unavailable. Use the button below to download.'
-  }
-})
+const faqs = [
+  { question: 'Where does the Android download come from?', answer: 'The download button and QR code point to the Voclaria v1.0.0 APK hosted in this project’s official GitHub Release. The file is approximately 121.5 MiB.' },
+  { question: 'Which platforms are currently available?', answer: 'The current public release is an Android APK. A public iOS download is not listed, so this page does not promise an iOS release or timeline.' },
+  { question: 'Why may Android ask for installation permission?', answer: 'Because Voclaria is distributed as a direct APK instead of through an app store, Android may ask you to allow installs from your browser or file manager. Review the Android prompt before continuing.' },
+  { question: 'What device permissions can the app use?', answer: 'The application source declares camera, microphone, media, network, and related permissions for recording and live-session features. Android controls when those permissions are requested.' },
+  { question: 'Does every feature work offline?', answer: 'Voclaria uses network-backed services for authentication, stored progress, community features, and analysis workflows. A reliable internet connection should be expected for the full experience.' },
+  { question: 'Is pricing published?', answer: 'No verified public pricing is currently listed. Use the contact section for availability or school-related questions.' },
+]
 
-function onDownloadClick() {
-  track('download_click', { target: 'android_apk' })
-}
-
-// Button href with UTM (button vs QR attribution)
 const buttonHref = computed(() => {
-  const url = new URL(DOWNLOAD_URL, window.location.origin)
-  url.searchParams.set('utm_source', 'button')
-  url.searchParams.set('utm_medium', 'landing')
+  const url = new URL(DOWNLOAD_URL)
+  url.searchParams.set('utm_source', 'landing-page')
+  url.searchParams.set('utm_medium', 'download-button')
   return url.toString()
 })
 
-function submitInquiry(e) {
-  e?.preventDefault?.()
-  if (!nameInput.value || !emailInput.value || !messageInput.value) return
-
-  submitting.value = true
-  track('inquiry_submit_attempt', { name: !!nameInput.value, email: !!emailInput.value })
-
-  // Simple mailto flow (no backend required)
-  const subject = encodeURIComponent('Voclaria Inquiry')
-  const body = encodeURIComponent(
-    `Name: ${nameInput.value}\nEmail: ${emailInput.value}\n\nMessage:\n${messageInput.value}`
-  )
-  const href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`
-
-  window.open(href, '_blank')
-
-  setTimeout(() => {
-    formSuccess.value = true
-    nameInput.value = ''
-    emailInput.value = ''
-    messageInput.value = ''
-    submitting.value = false
-    track('inquiry_submit_success')
-    
-    setTimeout(() => {
-      formSuccess.value = false
-    }, 3000)
-  }, 300)
+function closeMenu() {
+  menuOpen.value = false
 }
 
-// Team data
-const team = [
-  { initials: 'DF', name: 'Dianna Mae Flores', role: 'Project Manager' },
-  { initials: 'XB', name: 'Xaian Paul Belderol', role: 'UI/UX designer / Frontend Developer' },
-  { initials: 'RD', name: 'Rockford Jade Dagohoy', role: 'AI Developer / Backend Developer / System analyst' },
-  { initials: 'EA', name: 'Earl Ang', role: 'UI/UX designer / Frontend Developer / Backend Developer' },
-]
+function navigateTo(href, event) {
+  event?.preventDefault?.()
+  closeMenu()
 
-// Feature icons mapping
-const features = [
-  { icon: '🎤', title: 'AI Feedback', description: 'Real-time evaluation on pronunciation, fluency, pacing, and clarity.' },
-  { icon: '📊', title: 'Teacher Dashboard', description: 'Assign lessons, review analytics, and track student progress easily.' },
-  { icon: '✓', title: 'Curriculum-Aligned', description: 'Built for SHS Oral Communication and Reading & Writing curricula.' },
-]
+  const target = document.querySelector(href)
+  if (!target) return
 
-// FAQ data
-const faqs = [
-  {
-    question: 'Is the APK safe to install?',
-    answer: 'Yes. It\'s signed by our team and hosted from this site. We follow Android security best practices and undergo regular security audits.'
-  },
-  {
-    question: 'What devices are supported?',
-    answer: 'Voclaria works on Android 8.0 and above. Most modern smartphones and tablets are compatible.'
-  },
-  {
-    question: 'Is iOS version available?',
-    answer: 'iOS version is currently in development. Sign up for our newsletter to get notified when it\'s ready for TestFlight access.'
+  const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches
+  target.scrollIntoView({ behavior: reducedMotion ? 'auto' : 'smooth', block: 'start' })
+  window.history.pushState(null, '', href)
+}
+
+async function handleEscape(event) {
+  if (event.key !== 'Escape' || !menuOpen.value) return
+
+  closeMenu()
+  await nextTick()
+  menuToggle.value?.focus()
+}
+
+function submitInquiry() {
+  if (!nameInput.value || !emailInput.value || !messageInput.value) return
+
+  const subject = encodeURIComponent('Voclaria Inquiry')
+  const body = encodeURIComponent(`Name: ${nameInput.value}\nEmail: ${emailInput.value}\n\nMessage:\n${messageInput.value}`)
+  formStatus.value = 'Your email app should open with a prepared draft. Review it and press Send there to deliver your inquiry.'
+  window.location.href = `mailto:${CONTACT_EMAIL}?subject=${subject}&body=${body}`
+}
+
+async function setupQrCode() {
+  if (!window.matchMedia('(min-width: 1024px)').matches) return
+
+  try {
+    const { default: QRCode } = await import('qrcode')
+    const url = new URL(DOWNLOAD_URL)
+    url.searchParams.set('utm_source', 'qr-code')
+    url.searchParams.set('utm_medium', 'landing-page')
+    qrDataUrl.value = await QRCode.toDataURL(url.toString(), {
+      errorCorrectionLevel: 'M',
+      margin: 2,
+      width: 420,
+      color: { dark: '#11142A', light: '#FFFFFFFF' },
+    })
+  } catch (error) {
+    console.error('Failed generating QR:', error)
+    qrError.value = 'QR code unavailable. Use the Android download button instead.'
   }
-]
+}
+
+function setupReveals() {
+  const elements = document.querySelectorAll('[data-reveal]')
+  if (!('IntersectionObserver' in window) || window.matchMedia('(prefers-reduced-motion: reduce)').matches) {
+    elements.forEach((element) => element.classList.add('is-visible'))
+    return
+  }
+
+  revealObserver = new IntersectionObserver((entries) => {
+    entries.forEach((entry) => {
+      if (!entry.isIntersecting) return
+      entry.target.classList.add('is-visible')
+      revealObserver?.unobserve(entry.target)
+    })
+  }, { threshold: 0.12, rootMargin: '0px 0px -48px' })
+
+  elements.forEach((element) => {
+    element.classList.add('reveal-ready')
+    revealObserver.observe(element)
+  })
+}
+
+onMounted(async () => {
+  document.addEventListener('keydown', handleEscape)
+  await setupQrCode()
+  await nextTick()
+  setupReveals()
+})
+
+onBeforeUnmount(() => {
+  document.removeEventListener('keydown', handleEscape)
+  revealObserver?.disconnect()
+})
 </script>
 
 <template>
-  <section
-    class="relative min-h-screen overflow-hidden text-white bg-gradient-to-b from-[#0F172A] via-[#1E293B] to-[#0F172A]"
-  >
-    <!-- Decorative animated blobs -->
-    <div class="pointer-events-none">
-      <div class="absolute w-96 h-96 bg-purple-500/10 rounded-full -top-48 -left-24 blur-3xl animate-pulse" />
-      <div class="absolute w-80 h-80 bg-blue-500/10 rounded-full top-64 -left-40 blur-3xl hidden xl:block animate-pulse" style="animation-delay: 2s;" />
-      <div class="absolute w-96 h-96 bg-purple-500/10 rounded-full -bottom-32 -right-24 blur-3xl animate-pulse" style="animation-delay: 1s;" />
-    </div>
+  <div class="site-shell">
+    <a class="skip-link" href="#main-content">Skip to main content</a>
 
-    <!-- STICKY NAV -->
-    <header
-      class="sticky top-0 z-50 border-b border-white/10 bg-[#0F172A]/80 backdrop-blur-xl supports-[backdrop-filter]:bg-[#0F172A]/60"
-    >
-      <div class="w-full max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-        <div class="h-16 flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <img :src="logoUrl" alt="Voclaria logo" class="w-10 h-10 hover:scale-110 transition-transform" />
-            <h1 class="font-extrabold tracking-tight text-lg md:text-xl bg-gradient-to-r from-white to-purple-300 bg-clip-text text-transparent">
-              Voclaria
-            </h1>
-          </div>
+    <header class="site-header">
+      <div class="page-width header-inner">
+        <a class="brand" href="#top" aria-label="Voclaria home" @click="navigateTo('#top', $event)">
+          <span class="brand-mark"><img :src="logoUrl" alt="" /></span>
+          <span>Voclaria</span>
+        </a>
 
-          <nav class="hidden md:flex items-center gap-1">
-            <a href="#features" class="text-gray-300 hover:text-white px-4 py-2 text-sm font-medium transition-all rounded-lg hover:bg-purple-600/10">Features</a>
-            <a href="#how-it-works" class="text-gray-300 hover:text-white px-4 py-2 text-sm font-medium transition-all rounded-lg hover:bg-purple-600/10">How it works</a>
-            <a href="#members" class="text-gray-300 hover:text-white px-4 py-2 text-sm font-medium transition-all rounded-lg hover:bg-purple-600/10">Team</a>
-            <a href="#faq" class="text-gray-300 hover:text-white px-4 py-2 text-sm font-medium transition-all rounded-lg hover:bg-purple-600/10">FAQ</a>
-            <a href="#inquiries" class="text-gray-300 hover:text-white px-4 py-2 text-sm font-medium transition-all rounded-lg hover:bg-purple-600/10">Contact</a>
-          </nav>
-        </div>
+        <nav class="desktop-nav" aria-label="Primary navigation">
+          <a v-for="item in navItems" :key="item.href" :href="item.href" @click="navigateTo(item.href, $event)">{{ item.label }}</a>
+        </nav>
+
+        <a class="header-download" :href="buttonHref">Download app</a>
+
+        <button ref="menuToggle" class="menu-toggle" type="button" :aria-expanded="menuOpen" aria-controls="mobile-navigation" :aria-label="menuOpen ? 'Close navigation menu' : 'Open navigation menu'" @click="menuOpen = !menuOpen">
+          <span :class="{ open: menuOpen }"></span>
+          <span :class="{ open: menuOpen }"></span>
+        </button>
+      </div>
+
+      <div v-show="menuOpen" id="mobile-navigation" class="mobile-nav-panel">
+        <nav class="page-width mobile-nav" aria-label="Mobile navigation">
+          <a v-for="item in navItems" :key="item.href" :href="item.href" @click="navigateTo(item.href, $event)">{{ item.label }} <span aria-hidden="true">↗</span></a>
+          <a class="mobile-download" :href="buttonHref" @click="closeMenu">Download Android APK</a>
+        </nav>
       </div>
     </header>
 
-    <!-- HERO -->
-    <div class="relative z-10">
-      <div class="w-full max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-        <div class="py-16 sm:py-24 md:py-28 lg:py-32">
-          <div class="grid grid-cols-1 lg:grid-cols-2 gap-12 xl:gap-16 items-center">
-            <!-- Left column -->
-            <div>
-              <div class="space-y-4 mb-8">
-                <span class="inline-block px-4 py-2 rounded-full bg-purple-500/20 border border-purple-500/50 text-purple-300 text-sm font-semibold">
-                  🚀 Revolutionizing Education
-                </span>
-                <h1 class="font-extrabold leading-tight text-5xl sm:text-6xl md:text-7xl">
-                  Master Your
-                </h1>
-                <h1 class="font-extrabold leading-tight text-5xl sm:text-6xl md:text-7xl bg-gradient-to-r from-purple-400 via-blue-400 to-purple-400 bg-clip-text text-transparent animate-pulse">
-                  Communication Skills
-                </h1>
-              </div>
+    <main id="main-content">
+      <section id="top" class="hero-section">
+        <div class="hero-glow hero-glow-one"></div>
+        <div class="hero-glow hero-glow-two"></div>
 
-              <p class="text-gray-300 text-lg leading-relaxed max-w-xl mb-10">
-                Practice reading and speaking with real-time AI feedback powered by advanced machine learning. Teachers can assign tasks, track growth, and align work to SHS standards—all in one intuitive app.
-              </p>
+        <div class="page-width hero-grid">
+          <div class="hero-copy">
+            <p class="eyebrow hero-eyebrow"><span></span> Learning that finds your voice</p>
+            <h1>Read with clarity.<br /><em>Speak with confidence.</em></h1>
+            <p class="hero-description">Voclaria brings reading and speaking practice into one focused mobile experience, with guided lessons, recorded activities, feedback flows, and progress you can revisit.</p>
 
-              <!-- Stats -->
-              <div class="grid grid-cols-3 gap-6 mb-10">
-                <div>
-                  <p class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">10K+</p>
-                  <p class="text-sm text-gray-400">Active Learners</p>
-                </div>
-                <div>
-                  <p class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">95%</p>
-                  <p class="text-sm text-gray-400">Success Rate</p>
-                </div>
-                <div>
-                  <p class="text-2xl md:text-3xl font-bold bg-gradient-to-r from-purple-400 to-blue-400 bg-clip-text text-transparent">4.8★</p>
-                  <p class="text-sm text-gray-400">App Rating</p>
-                </div>
-              </div>
-
-              <!-- CTAs -->
-              <div class="flex flex-wrap gap-4 mb-10">
-                <!-- Download button - only visible on mobile Chrome -->
-                <a
-                  v-if="isMobileChrome"
-                  :href="buttonHref"
-                  @click="onDownloadClick"
-                  class="px-8 py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 rounded-xl text-white font-bold transition-all shadow-xl hover:shadow-2xl transform hover:-translate-y-1 duration-300 text-lg"
-                >
-                  ⬇️ Download Now
-                </a>
-                <a
-                  href="#inquiries"
-                  class="px-8 py-4 border-2 border-purple-500/50 hover:border-purple-400 hover:bg-purple-500/10 rounded-xl font-bold transition-all duration-300 text-lg"
-                >
-                  💬 Get in Touch
-                </a>
-              </div>
-
-              <!-- Social proof -->
-              <div class="flex items-center gap-4 pt-6 border-t border-white/10">
-                <div class="flex -space-x-3">
-                  <div class="w-12 h-12 rounded-full bg-gradient-to-br from-purple-500 to-purple-600 ring-2 ring-[#0F172A] flex items-center justify-center text-white text-sm font-bold">JD</div>
-                  <div class="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-blue-600 ring-2 ring-[#0F172A] flex items-center justify-center text-white text-sm font-bold">AR</div>
-                  <div class="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-500 to-indigo-600 ring-2 ring-[#0F172A] flex items-center justify-center text-white text-sm font-bold">KM</div>
-                </div>
-                <div>
-                  <p class="text-gray-300 text-sm font-medium">
-                    Trusted by <span class="text-white font-bold">500+ Schools</span>
-                  </p>
-                  <p class="text-xs text-gray-400">Join educators transforming communication skills</p>
-                </div>
-              </div>
+            <div class="hero-actions">
+              <a class="button button-primary" :href="buttonHref"><span>Download for Android</span><span aria-hidden="true">↓</span></a>
+              <a class="button button-secondary" href="#students" @click="navigateTo('#students', $event)">Explore the experience <span aria-hidden="true">↘</span></a>
             </div>
 
-            <!-- Right column: QR (desktop only) -->
-            <div class="hidden lg:block">
-              <div class="relative">
-                <div class="absolute inset-0 bg-gradient-to-r from-purple-600/20 to-blue-600/20 rounded-3xl blur-2xl" />
-                <div class="relative rounded-3xl border border-white/20 bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-2xl p-10 shadow-2xl">
-                  <div class="flex flex-col items-center">
-                    <template v-if="qrDataUrl">
-                      <div class="bg-white p-6 rounded-2xl shadow-xl">
-                        <img
-                          :src="qrDataUrl"
-                          alt="Scan to download Voclaria"
-                          class="w-64 h-64 rounded-lg"
-                          loading="eager"
-                          decoding="async"
-                        />
-                      </div>
-                      <p class="mt-8 text-center text-gray-100 font-bold text-lg">
-                        Scan with your phone
-                      </p>
-                      <p class="mt-2 text-center text-sm text-gray-400">
-                        📱 v1.0.3 • 121 MB • Android 8.0+
-                      </p>
-                      <div class="mt-6 w-full pt-6 border-t border-white/10">
-                        <p class="text-center text-xs text-gray-500">
-                          ✓ Verified • Safe to Install • No Hidden Permissions
-                        </p>
-                      </div>
-                    </template>
-
-                    <template v-else>
-                      <div class="text-sm text-gray-300 mb-4" v-if="qrError">{{ qrError }}</div>
-                      <a
-                        :href="buttonHref"
-                        @click="onDownloadClick"
-                        class="mt-4 px-6 py-4 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600 rounded-xl text-white font-bold transition-all shadow-lg hover:shadow-xl"
-                      >
-                        Download for Android
-                      </a>
-                    </template>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- FEATURES -->
-    <section id="features" class="py-28 bg-gradient-to-b from-[#111827] to-[#0F172A] border-t border-white/10">
-      <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-          <h2 class="text-4xl md:text-5xl lg:text-6xl font-extrabold text-white mb-4">
-            Powerful Features
-          </h2>
-          <p class="text-gray-400 text-lg max-w-3xl mx-auto">
-            Everything educators and students need to excel in communication
-          </p>
-        </div>
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
-          <div v-for="(feature, i) in features" :key="i" 
-               class="group relative overflow-hidden rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-8 hover:border-purple-500/50 hover:bg-white/[0.08] transition-all duration-300 hover:shadow-2xl hover:-translate-y-2">
-            <div class="absolute inset-0 bg-gradient-to-r from-purple-600/0 to-blue-600/0 group-hover:from-purple-600/10 group-hover:to-blue-600/10 transition-all duration-300" />
-            <div class="relative">
-              <div class="text-6xl mb-4 transform group-hover:scale-110 transition-transform duration-300">{{ feature.icon }}</div>
-              <h3 class="text-2xl font-bold text-white mb-3 group-hover:text-purple-300 transition-colors">{{ feature.title }}</h3>
-              <p class="text-gray-400 leading-relaxed text-lg">{{ feature.description }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- TESTIMONIALS -->
-    <section class="py-28 bg-[#0F172A] border-t border-white/10">
-      <div class="max-w-4xl mx-auto px-5 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-          <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-4">
-            What Users Love
-          </h2>
-          <p class="text-gray-400 text-lg">Real stories from students and teachers</p>
-        </div>
-        <div class="grid sm:grid-cols-2 gap-8">
-          <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-8 hover:border-purple-500/30 hover:shadow-xl transition-all">
-            <div class="flex gap-1 mb-4">⭐⭐⭐⭐⭐</div>
-            <p class="italic text-gray-200 mb-4 text-lg leading-relaxed">
-              "Voclaria transformed how I practice speaking. The AI feedback is incredibly accurate and helpful. I'm way more confident now!"
-            </p>
-            <div>
-              <p class="text-white font-bold">Maria Santos</p>
-              <p class="text-sm text-purple-400">Grade 12 HUMSS Student</p>
-            </div>
-          </div>
-          <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-8 hover:border-purple-500/30 hover:shadow-xl transition-all">
-            <div class="flex gap-1 mb-4">⭐⭐⭐⭐⭐</div>
-            <p class="italic text-gray-200 mb-4 text-lg leading-relaxed">
-              "As a teacher, I love the dashboard. Tracking student progress is effortless, and students stay engaged with the instant feedback."
-            </p>
-            <div>
-              <p class="text-white font-bold">Mr. Eduardo Cruz</p>
-              <p class="text-sm text-purple-400">Oral Communication Teacher</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- HOW IT WORKS -->
-    <section id="how-it-works" class="py-28 bg-gradient-to-b from-[#111827] to-[#0F172A] border-t border-white/10">
-      <div class="max-w-6xl mx-auto px-5 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-          <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-4">
-            How It Works
-          </h2>
-          <p class="text-gray-400 text-lg">Three simple steps to better communication</p>
-        </div>
-        <div class="grid sm:grid-cols-3 gap-6 md:gap-8">
-          <div class="relative group">
-            <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-8 h-full hover:border-purple-500/30 hover:shadow-xl transition-all">
-              <div class="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl mb-6 group-hover:scale-110 transition-transform">1</div>
-              <h3 class="text-xl font-bold text-white mb-3">Practice</h3>
-              <p class="text-gray-400 leading-relaxed">Students read or speak assigned tasks directly in the app with a simple interface.</p>
-            </div>
-            <div class="hidden sm:block absolute top-1/2 -right-4 w-8 h-[3px] bg-gradient-to-r from-purple-500 via-purple-500 to-transparent group-hover:from-purple-400 transition-all"></div>
-          </div>
-          <div class="relative group">
-            <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-8 h-full hover:border-purple-500/30 hover:shadow-xl transition-all">
-              <div class="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl mb-6 group-hover:scale-110 transition-transform">2</div>
-              <h3 class="text-xl font-bold text-white mb-3">Get Instant Feedback</h3>
-              <p class="text-gray-400 leading-relaxed">AI analyzes pronunciation, pacing, clarity, and fluency with detailed breakdowns.</p>
-            </div>
-            <div class="hidden sm:block absolute top-1/2 -right-4 w-8 h-[3px] bg-gradient-to-r from-purple-500 via-purple-500 to-transparent group-hover:from-purple-400 transition-all"></div>
-          </div>
-          <div class="group">
-            <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-8 h-full hover:border-purple-500/30 hover:shadow-xl transition-all">
-              <div class="w-16 h-16 rounded-full bg-gradient-to-r from-purple-500 to-purple-600 flex items-center justify-center text-white font-bold text-2xl mb-6 group-hover:scale-110 transition-transform">3</div>
-              <h3 class="text-xl font-bold text-white mb-3">Track Progress</h3>
-              <p class="text-gray-400 leading-relaxed">Teachers access comprehensive analytics and adjust lessons based on real performance data.</p>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- MEMBERS -->
-    <section id="members" class="py-28 bg-[#0F172A] border-t border-white/10">
-      <div class="max-w-5xl mx-auto px-5 sm:px-6 lg:px-8 text-center">
-        <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-4">Meet the Team</h2>
-        <p class="text-gray-400 text-lg mb-16">Passionate educators and engineers building the future of learning</p>
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-6">
-          <div v-for="m in team" :key="m.name" 
-               class="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-8 hover:border-purple-500/30 hover:shadow-xl hover:bg-white/[0.08] transition-all duration-300 group">
-            <div class="w-24 h-24 mx-auto rounded-full bg-gradient-to-br from-purple-500 to-purple-600 ring-4 ring-purple-500/20 flex items-center justify-center text-3xl font-bold text-white mb-4 group-hover:scale-110 transition-transform">
-              {{ m.initials }}
-            </div>
-            <h3 class="font-bold text-white text-lg mb-1">{{ m.name }}</h3>
-            <p class="text-sm text-purple-300 font-medium">{{ m.role }}</p>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FAQ -->
-    <section id="faq" class="py-28 bg-gradient-to-b from-[#111827] to-[#0F172A] border-t border-white/10">
-      <div class="max-w-3xl mx-auto px-5 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-          <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-4">
-            Frequently Asked Questions
-          </h2>
-          <p class="text-gray-400 text-lg">Everything you need to know about Voclaria</p>
-        </div>
-        <div class="space-y-4">
-          <details class="group rounded-xl border border-white/10 bg-gradient-to-r from-white/5 to-white/[0.02] p-6 hover:border-purple-500/30 hover:bg-white/[0.08] transition-all cursor-pointer">
-            <summary class="cursor-pointer font-semibold text-white flex justify-between items-center text-lg">
-              Is the APK safe to install?
-              <span class="text-gray-400 group-open:rotate-180 transition-transform duration-300">⌄</span>
-            </summary>
-            <p class="text-gray-300 text-base mt-4">Yes, absolutely! Our APK is digitally signed by our verified developer account. We follow all Android security best practices, undergo regular security audits, and don't request unnecessary permissions. Your data security is our priority.</p>
-          </details>
-
-          <details class="group rounded-xl border border-white/10 bg-gradient-to-r from-white/5 to-white/[0.02] p-6 hover:border-purple-500/30 hover:bg-white/[0.08] transition-all cursor-pointer">
-            <summary class="cursor-pointer font-semibold text-white flex justify-between items-center text-lg">
-              What devices are supported?
-              <span class="text-gray-400 group-open:rotate-180 transition-transform duration-300">⌄</span>
-            </summary>
-            <p class="text-gray-300 text-base mt-4">Voclaria runs on Android 8.0 and higher. Most modern smartphones and tablets from the last 5+ years are fully compatible. For optimal performance, we recommend devices with at least 2GB of RAM.</p>
-          </details>
-
-          <details class="group rounded-xl border border-white/10 bg-gradient-to-r from-white/5 to-white/[0.02] p-6 hover:border-purple-500/30 hover:bg-white/[0.08] transition-all cursor-pointer">
-            <summary class="cursor-pointer font-semibold text-white flex justify-between items-center text-lg">
-              Is iOS version available?
-              <span class="text-gray-400 group-open:rotate-180 transition-transform duration-300">⌄</span>
-            </summary>
-            <p class="text-gray-300 text-base mt-4">🚀 <span class="text-purple-400 font-semibold">iOS version is currently in development!</span> We're working hard to bring Voclaria to iPhone and iPad users. Sign up below to get notified when TestFlight access becomes available—be among the first to try it!</p>
-          </details>
-
-          <details class="group rounded-xl border border-white/10 bg-gradient-to-r from-white/5 to-white/[0.02] p-6 hover:border-purple-500/30 hover:bg-white/[0.08] transition-all cursor-pointer">
-            <summary class="cursor-pointer font-semibold text-white flex justify-between items-center text-lg">
-              Does Voclaria work offline?
-              <span class="text-gray-400 group-open:rotate-180 transition-transform duration-300">⌄</span>
-            </summary>
-            <p class="text-gray-300 text-base mt-4">Voclaria requires an internet connection for AI-powered feedback processing. However, once you download practice materials, you can review them offline. Your recordings and analytics automatically sync when you reconnect to the internet.</p>
-          </details>
-
-          <details class="group rounded-xl border border-white/10 bg-gradient-to-r from-white/5 to-white/[0.02] p-6 hover:border-purple-500/30 hover:bg-white/[0.08] transition-all cursor-pointer">
-            <summary class="cursor-pointer font-semibold text-white flex justify-between items-center text-lg">
-              How much does Voclaria cost?
-              <span class="text-gray-400 group-open:rotate-180 transition-transform duration-300">⌄</span>
-            </summary>
-            <p class="text-gray-300 text-base mt-4">We offer flexible pricing for schools and individual learners. Contact us for a custom quote based on your needs. Many schools qualify for educational discounts!</p>
-          </details>
-        </div>
-      </div>
-    </section>
-
-    <!-- INQUIRIES -->
-    <section id="inquiries" class="py-28 bg-[#0F172A] border-t border-white/10">
-      <div class="max-w-5xl mx-auto px-5 sm:px-6 lg:px-8">
-        <div class="text-center mb-16">
-          <h2 class="text-4xl md:text-5xl font-extrabold text-white mb-4">Let's Connect</h2>
-          <p class="text-gray-400 text-lg">
-            Tell us about your school, class, or use case. We'll get back to you within 24 hours.
-          </p>
-        </div>
-
-        <div class="grid gap-8 md:grid-cols-2">
-          <!-- Contact Info -->
-          <div class="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-10">
-            <h3 class="text-2xl font-bold text-white mb-8">Contact Information</h3>
-            <div class="space-y-6">
-              <div class="flex gap-4">
-                <div class="text-2xl">📧</div>
-                <div>
-                  <p class="text-sm text-gray-400 mb-1">Email</p>
-                  <a :href="`mailto:${CONTACT_EMAIL}`" class="text-purple-400 hover:text-purple-300 font-bold text-lg transition-colors">
-                    {{ CONTACT_EMAIL }}
-                  </a>
-                </div>
-              </div>
-              <div class="flex gap-4">
-                <div class="text-2xl">📍</div>
-                <div>
-                  <p class="text-sm text-gray-400 mb-1">Location</p>
-                  <p class="text-white font-semibold">Davao City, Philippines</p>
-                </div>
-              </div>
-              <div class="flex gap-4">
-                <div class="text-2xl">🕐</div>
-                <div>
-                  <p class="text-sm text-gray-400 mb-1">Business Hours</p>
-                  <p class="text-white font-semibold">Monday–Friday, 9:00–17:00 (PH Time)</p>
-                </div>
-              </div>
-              <div class="pt-6 border-t border-white/10 flex gap-4">
-                <a href="https://facebook.com/voclaria" target="_blank" class="px-4 py-2 rounded-lg bg-blue-600/20 text-blue-300 hover:bg-blue-600/30 transition-all font-semibold text-sm">
-                  Facebook
-                </a>
-                <a href="https://t.me/voclaria" target="_blank" class="px-4 py-2 rounded-lg bg-blue-500/20 text-blue-300 hover:bg-blue-500/30 transition-all font-semibold text-sm">
-                  Telegram
-                </a>
-              </div>
+            <div class="release-line" aria-label="Current release information">
+              <span class="status-dot"></span>
+              <span><strong>v1.0.0</strong> · 121.5 MiB · Android APK</span>
+              <a :href="RELEASE_URL" target="_blank" rel="noopener noreferrer">View release</a>
             </div>
           </div>
 
-          <!-- Form -->
-          <form @submit="submitInquiry" class="rounded-2xl border border-white/10 bg-gradient-to-br from-white/5 to-white/[0.02] p-10">
-            <div v-if="formSuccess" class="mb-6 p-4 rounded-lg bg-green-500/20 border border-green-500/50 text-green-300 text-sm font-bold flex items-center gap-2">
-              ✓ Message sent successfully! We'll reply soon.
-            </div>
-            
-            <div class="space-y-5">
-              <div>
-                <label class="block text-sm font-bold text-gray-300 mb-2" for="inq-name">Full Name</label>
-                <input id="inq-name" v-model="nameInput" type="text" required
-                       class="w-full rounded-lg bg-white/[0.04] border border-white/10 px-4 py-3 text-white
-                              outline-none focus:ring-2 focus:ring-purple-500/80 focus:border-purple-500/40 focus:bg-white/[0.08]
-                              placeholder:text-gray-500 transition-all text-base" placeholder="John Doe" />
-              </div>
-
-              <div>
-                <label class="block text-sm font-bold text-gray-300 mb-2" for="inq-email">Email Address</label>
-                <input id="inq-email" v-model="emailInput" type="email" required
-                       class="w-full rounded-lg bg-white/[0.04] border border-white/10 px-4 py-3 text-white
-                              outline-none focus:ring-2 focus:ring-purple-500/80 focus:border-purple-500/40 focus:bg-white/[0.08]
-                              placeholder:text-gray-500 transition-all text-base" placeholder="john@school.edu" />
-              </div>
-
-              <div>
-                <label class="block text-sm font-bold text-gray-300 mb-2" for="inq-message">Message</label>
-                <textarea id="inq-message" v-model="messageInput" rows="5" required
-                          class="w-full rounded-lg bg-white/[0.04] border border-white/10 px-4 py-3 text-white
-                                 outline-none focus:ring-2 focus:ring-purple-500/80 focus:border-purple-500/40 focus:bg-white/[0.08]
-                                 placeholder:text-gray-500 resize-none transition-all text-base" placeholder="Tell us about your school, class size, and goals..."></textarea>
+          <div class="product-stage" aria-label="Voclaria branded product presentation">
+            <div class="orbit orbit-one"></div><div class="orbit orbit-two"></div><div class="phone-shadow"></div>
+            <div class="phone-frame">
+              <div class="phone-speaker"></div>
+              <div class="phone-screen">
+                <div class="phone-topline"><img :src="logoUrl" alt="" /><span>VOCLARIA</span><span class="phone-pill">LEARN</span></div>
+                <div class="phone-welcome"><small>Your practice space</small><strong>Build your voice,<br />one lesson at a time.</strong></div>
+                <div class="mode-card mode-reading"><span class="mode-icon">Aa</span><span><small>READING</small><strong>Guided practice</strong></span><b>↗</b></div>
+                <div class="mode-card mode-speaking"><span class="mode-icon">Wv</span><span><small>SPEAKING</small><strong>Voice activities</strong></span><b>↗</b></div>
+                <div class="progress-card"><div><small>LEARNING PROGRESS</small><strong>Continue your modules</strong></div><div class="progress-rings" aria-hidden="true"><i></i><i></i><i></i></div></div>
               </div>
             </div>
+            <div class="floating-chip chip-reading"><span>Aa</span> Reading modules</div>
+            <div class="floating-chip chip-speaking"><span>◉</span> Speaking practice</div>
+            <p class="product-caption">Branded product illustration based on implemented app capabilities.</p>
+          </div>
+        </div>
 
-            <button type="submit"
-                    :disabled="submitting || !nameInput || !emailInput || !messageInput"
-                    class="mt-6 w-full px-6 py-4 rounded-lg bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-500 hover:to-purple-600
-                           text-white font-bold transition-all shadow-lg hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed transform hover:-translate-y-1 duration-300 text-lg">
-              {{ submitting ? 'Sending…' : 'Send Message' }}
-            </button>
+        <div class="page-width hero-rail" aria-label="Voclaria focus areas"><span>Reading</span><i></i><span>Speaking</span><i></i><span>Practice</span><i></i><span>Progress</span></div>
+      </section>
+
+      <section id="students" class="section student-section">
+        <div class="page-width">
+          <div class="section-heading split-heading" data-reveal>
+            <div><p class="eyebrow"><span></span> For students</p><h2>A calmer place to<br /><em>practice out loud.</em></h2></div>
+            <p>Build the habits behind clearer reading and speaking through focused modules, repeatable practice, and progress you can return to.</p>
+          </div>
+          <div class="feature-grid">
+            <article v-for="(feature, index) in studentFeatures" :key="feature.title" class="feature-card" data-reveal :style="{ '--delay': `${index * 70}ms` }">
+              <div class="feature-glyph">{{ feature.glyph }}</div><p class="card-eyebrow">{{ feature.eyebrow }}</p><h3>{{ feature.title }}</h3><p>{{ feature.description }}</p><span class="card-index">0{{ index + 1 }}</span>
+            </article>
+          </div>
+        </div>
+      </section>
+
+      <section class="section proof-section">
+        <div class="page-width proof-grid">
+          <div class="proof-copy" data-reveal>
+            <p class="eyebrow light"><span></span> Verified product scope</p><h2>Built around<br /><em>real learning flows.</em></h2>
+            <p>Voclaria brings reading, speaking, class management, and progress tracking into one connected learning experience for students and educators.</p>
+            <a :href="APP_SOURCE_URL" target="_blank" rel="noopener noreferrer" class="text-link">Inspect the application source <span aria-hidden="true">↗</span></a>
+          </div>
+          <ul class="scope-list" data-reveal>
+            <li v-for="(item, index) in verifiedScope" :key="item"><span>0{{ index + 1 }}</span><strong>{{ item }}</strong><i aria-hidden="true">✓</i></li>
+          </ul>
+        </div>
+      </section>
+
+      <section id="educators" class="section educator-section">
+        <div class="page-width educator-grid">
+          <div class="educator-visual" data-reveal aria-hidden="true">
+            <div class="dashboard-card">
+              <div class="dashboard-header"><div><small>EDUCATOR OVERVIEW</small><strong>Class progress</strong></div><span>•••</span></div>
+              <div class="dashboard-metrics"><div><span>Speaking</span><strong>Modules</strong><i style="--value: 72%"></i></div><div><span>Reading</span><strong>Practice</strong><i style="--value: 58%"></i></div></div>
+              <div class="student-row"><b>AM</b><span><strong>Learner progress</strong><small>Reading and speaking</small></span><em>Active</em></div>
+              <div class="student-row"><b>JL</b><span><strong>Module overview</strong><small>Assigned activities</small></span><em>Review</em></div>
+              <div class="student-row"><b>KS</b><span><strong>Class activity</strong><small>Upcoming work</small></span><em>View</em></div>
+            </div>
+            <p>Conceptual dashboard composition — not an application screenshot.</p>
+          </div>
+          <div class="educator-copy" data-reveal>
+            <p class="eyebrow"><span></span> For educators</p><h2>Structure the practice.<br /><em>Support the progress.</em></h2>
+            <p class="section-intro">Voclaria’s teacher workflows connect class management, learner progress, modules, and live activities in one mobile application.</p>
+            <div class="educator-list"><article v-for="feature in educatorFeatures" :key="feature.number"><span>{{ feature.number }}</span><div><h3>{{ feature.title }}</h3><p>{{ feature.description }}</p></div></article></div>
+          </div>
+        </div>
+      </section>
+
+      <section id="how-it-works" class="section process-section">
+        <div class="page-width">
+          <div class="section-heading centered" data-reveal><p class="eyebrow"><span></span> A focused rhythm</p><h2>Practice. Review.<br /><em>Keep growing.</em></h2></div>
+          <div class="process-grid">
+            <article v-for="(step, index) in steps" :key="step.number" data-reveal :style="{ '--delay': `${index * 80}ms` }"><div class="process-number">{{ step.number }}</div><div class="process-line"><i></i></div><h3>{{ step.title }}</h3><p>{{ step.description }}</p></article>
+          </div>
+        </div>
+      </section>
+
+      <section class="download-section">
+        <div class="page-width download-card" data-reveal>
+          <div class="download-copy"><p class="eyebrow light"><span></span> Android release</p><h2>Make room for<br /><em>your next practice.</em></h2><p>Download the current Voclaria APK directly from the official GitHub Release.</p><a class="button button-light" :href="buttonHref">Download v1.0.0 <span aria-hidden="true">↓</span></a><small>121.5 MiB · Direct APK installation · Android only</small></div>
+          <div class="qr-panel">
+            <template v-if="qrDataUrl"><div class="qr-code"><img :src="qrDataUrl" alt="QR code for the Voclaria Android APK download" /></div><div><strong>Scan to download</strong><span>Open with your Android phone</span></div></template>
+            <template v-else><img class="qr-logo" :src="logoUrl" alt="Voclaria logo" /><p>{{ qrError || 'Open this page on desktop to display the download QR code.' }}</p></template>
+          </div>
+        </div>
+      </section>
+
+      <section id="team" class="section team-section">
+        <div class="page-width">
+          <div class="section-heading split-heading" data-reveal><div><p class="eyebrow"><span></span> The team</p><h2>Designed and built<br /><em>with purpose.</em></h2></div><p>Voclaria is the work of a four-person project team spanning product coordination, design, frontend, backend, AI, and systems analysis.</p></div>
+          <div class="team-grid"><article v-for="(member, index) in team" :key="member.name" data-reveal :style="{ '--delay': `${index * 65}ms` }"><div class="member-avatar"><span>{{ member.initials }}</span></div><span class="member-number">0{{ index + 1 }}</span><h3>{{ member.name }}</h3><p>{{ member.role }}</p></article></div>
+        </div>
+      </section>
+
+      <section id="faq" class="section faq-section">
+        <div class="page-width faq-grid">
+          <div class="faq-heading" data-reveal><p class="eyebrow"><span></span> Good to know</p><h2>Questions,<br /><em>answered plainly.</em></h2><p>Clear information about the current Android release and what to expect.</p></div>
+          <div class="faq-list" data-reveal><details v-for="faq in faqs" :key="faq.question"><summary><span>{{ faq.question }}</span><i aria-hidden="true"></i></summary><p>{{ faq.answer }}</p></details></div>
+        </div>
+      </section>
+
+      <section id="contact" class="section contact-section">
+        <div class="page-width contact-grid">
+          <div class="contact-copy" data-reveal><p class="eyebrow light"><span></span> Contact Voclaria</p><h2>Have a question?<br /><em>Start with an email.</em></h2><p>Ask about the Android release, the learning experience, or using Voclaria in a class setting.</p><div class="contact-details"><a :href="`mailto:${CONTACT_EMAIL}`"><span>Email</span><strong>{{ CONTACT_EMAIL }}</strong></a><div><span>Based in</span><strong>Davao City, Philippines</strong></div></div></div>
+          <form class="contact-form" data-reveal @submit.prevent="submitInquiry">
+            <div class="field-row"><label for="inquiry-name">Your name</label><input id="inquiry-name" v-model.trim="nameInput" type="text" autocomplete="name" required placeholder="How should we address you?" /></div>
+            <div class="field-row"><label for="inquiry-email">Email address</label><input id="inquiry-email" v-model.trim="emailInput" type="email" autocomplete="email" required placeholder="you@example.com" /></div>
+            <div class="field-row"><label for="inquiry-message">How can we help?</label><textarea id="inquiry-message" v-model.trim="messageInput" rows="5" required placeholder="Tell us what you’d like to know."></textarea></div>
+            <button class="button button-light form-submit" type="submit">Open email draft <span aria-hidden="true">↗</span></button>
+            <p class="form-note">This form opens your default email application. Your message is only delivered after you send it there.</p>
+            <p v-if="formStatus" class="form-status" role="status">{{ formStatus }}</p>
           </form>
         </div>
-      </div>
-    </section>
+      </section>
+    </main>
 
-    <!-- FOOTER -->
-    <footer class="py-16 border-t border-white/10 bg-[#0B1120]">
-      <div class="max-w-7xl mx-auto px-5 sm:px-6 lg:px-8">
-        <div class="grid md:grid-cols-3 gap-8 mb-8">
-          <div>
-            <h4 class="font-bold text-white mb-3">Product</h4>
-            <div class="space-y-2">
-              <a href="#features" class="text-gray-400 hover:text-purple-400 transition-colors text-sm">Features</a><br>
-              <a href="#faq" class="text-gray-400 hover:text-purple-400 transition-colors text-sm">FAQ</a>
-            </div>
-          </div>
-          <div>
-            <h4 class="font-bold text-white mb-3">Company</h4>
-            <div class="space-y-2">
-              <a href="#members" class="text-gray-400 hover:text-purple-400 transition-colors text-sm">Team</a><br>
-              <a href="#inquiries" class="text-gray-400 hover:text-purple-400 transition-colors text-sm">Contact</a>
-            </div>
-          </div>
-          <div>
-            <h4 class="font-bold text-white mb-3">Follow Us</h4>
-            <div class="space-y-2">
-              <a href="https://facebook.com/voclaria" target="_blank" class="text-gray-400 hover:text-purple-400 transition-colors text-sm">Facebook</a><br>
-              <a href="https://t.me/voclaria" target="_blank" class="text-gray-400 hover:text-purple-400 transition-colors text-sm">Telegram</a>
-            </div>
-          </div>
-        </div>
-        <div class="border-t border-white/10 pt-8 flex flex-col md:flex-row justify-between items-center">
-          <p class="text-gray-400 text-sm">© 2025 Voclaria. All rights reserved.</p>
-          <div class="flex gap-6 mt-4 md:mt-0">
-            <a :href="`mailto:${CONTACT_EMAIL}`" class="text-gray-400 hover:text-purple-400 transition-colors text-sm">Privacy</a>
-            <a href="#" class="text-gray-400 hover:text-purple-400 transition-colors text-sm">Terms</a>
-          </div>
-        </div>
-      </div>
+    <footer class="site-footer">
+      <div class="page-width footer-top"><a class="brand footer-brand" href="#top" @click="navigateTo('#top', $event)"><span class="brand-mark"><img :src="logoUrl" alt="" /></span><span>Voclaria</span></a><p>Reading and speaking practice, thoughtfully brought together.</p><a class="footer-download" :href="buttonHref">Download for Android <span aria-hidden="true">↓</span></a></div>
+      <div class="page-width footer-bottom"><p>© {{ new Date().getFullYear() }} Voclaria</p><nav aria-label="Footer navigation"><a href="#students" @click="navigateTo('#students', $event)">Students</a><a href="#educators" @click="navigateTo('#educators', $event)">Educators</a><a href="#team" @click="navigateTo('#team', $event)">Team</a><a href="#faq" @click="navigateTo('#faq', $event)">FAQ</a><a href="#contact" @click="navigateTo('#contact', $event)">Contact</a></nav><a :href="RELEASE_URL" target="_blank" rel="noopener noreferrer">GitHub release ↗</a></div>
     </footer>
-  </section>
+  </div>
 </template>

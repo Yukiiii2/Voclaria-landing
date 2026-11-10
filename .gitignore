@@ -34,4 +34,8 @@ coverage
 
 # Vitest
 __screenshots__/
-"*.apk" 
+*.apk
+
+# Local design and QA artifacts
+/docs/screenshots/
+/docs/superpowers/
